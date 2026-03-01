@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#e8dfd0">
+  <title>内職作業モード</title>
+  <meta name="description" content="大学の授業中みたいに「仕方なく集中できる」環境をつくるアプリ">
+  <meta property="og:title" content="内職作業モード">
+  <meta property="og:description" content="大学の授業中みたいに「仕方なく集中できる」環境をつくるアプリ">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Setup screen - warm lecture hall */
+      --bg-primary: #d8cebf;
+      --bg-secondary: #cfc4b3;
+      --bg-card: #e8dfd0;
+      --bg-card-border: rgba(0,0,0,0.06);
+      --text-primary: #2c2418;
+      --text-secondary: #6b5e4f;
+      --text-dim: #9a8d7e;
+      --accent: #5a7a3a;
+      --accent-glow: rgba(90, 122, 58, 0.25);
+      --accent-soft: rgba(90, 122, 58, 0.1);
+      --danger: #c0392b;
+      --success: #2ecc71;
+      --warning: #b8860b;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Classroom */
+      --chalk-green: #2a5a3a;
+      --chalk-green-dark: #1e3f2a;
+      --chalk-green-light: #3a7a50;
+      --chalk: #d4cdb8;
+      --chalk-dim: rgba(212, 205, 184, 0.35);
+      --chalk-faint: rgba(212, 205, 184, 0.12);
+      --wood: #6b4226;
+      --wood-light: #8b5e3c;
+      --wood-dark: #3e2518;
+
+      /* Warm light */
+      --warm-shadow: rgba(80, 60, 30, 0.12);
+      --warm-glow: rgba(200, 170, 100, 0.08);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Zen Maru Gothic', -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* ========== Screens ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: absolute;
+      top: 0; left: 0;
+      animation: fadeIn 0.5s ease;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== SETUP SCREEN ========== */
+    #setup-screen {
+      background:
+        radial-gradient(ellipse at 50% 0%, var(--warm-glow) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(180, 150, 100, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, #d8cebf 0%, #cfc4b3 50%, #c5b9a6 100%);
+    }
+
+    .setup-content { max-width: 440px; width: 100%; text-align: center; }
+
+    .hero-illustration {
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 12px var(--warm-shadow));
+    }
+
+    .app-title { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; color: #2c2418; }
+    .app-subtitle { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 32px; }
+
+    /* Conditions */
+    .conditions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+    .condition {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px; text-align: left;
+      display: flex; align-items: flex-start; gap: 10px;
+      box-shadow: 0 2px 8px var(--warm-shadow);
+    }
+    .condition-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; color: var(--text-secondary); }
+    .condition-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .condition-text strong { display: block; color: var(--text-primary); font-size: 13px; margin-bottom: 2px; }
+
+    /* Task Input */
+    .task-setting {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      text-align: left;
+      box-shadow: 0 2px 8px var(--warm-shadow);
+    }
+    .task-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .task-input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 15px; font-weight: 700;
+      color: var(--text-primary);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .task-input::placeholder { color: var(--text-dim); font-weight: 400; }
+    .task-input:focus { border-color: var(--accent); }
+
+    .task-examples {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+    }
+    .task-example {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(0,0,0,0.06);
+      color: var(--text-dim);
+      padding: 4px 10px; border-radius: 14px;
+      font-size: 11px; cursor: pointer;
+      transition: var(--transition);
+    }
+    .task-example:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* Timer Setting */
+    .timer-setting {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius);
+      padding: 24px; margin-bottom: 16px;
+      box-shadow: 0 2px 8px var(--warm-shadow);
+    }
+    .timer-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .timer-display { font-size: 48px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--text-primary); margin-bottom: 16px; letter-spacing: -1px; }
+    .timer-display span { font-size: 20px; color: var(--text-secondary); font-weight: 400; }
+
+    .timer-slider {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 3px;
+      background: var(--bg-secondary); outline: none; margin-bottom: 8px;
+    }
+    .timer-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 22px; height: 22px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      box-shadow: 0 2px 8px var(--accent-glow); transition: transform 0.15s;
+    }
+    .timer-slider::-webkit-slider-thumb:active { transform: scale(1.2); }
+
+    .timer-presets { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+    .preset-btn {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(0,0,0,0.06);
+      color: var(--text-secondary);
+      padding: 6px 14px; border-radius: 20px; font-size: 12px;
+      cursor: pointer; transition: var(--transition); font-family: inherit;
+    }
+    .preset-btn:hover, .preset-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+    .dnd-tip {
+      background: rgba(184, 134, 11, 0.08);
+      border: 1px solid rgba(184, 134, 11, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px; font-size: 12px; color: var(--warning);
+      line-height: 1.5; margin-bottom: 20px; text-align: left;
+    }
+
+    .start-btn {
+      width: 100%; padding: 18px; font-size: 16px; font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--chalk-green), var(--chalk-green-light));
+      border: none; border-radius: var(--radius); cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(42, 90, 58, 0.4);
+      letter-spacing: 0.5px; font-family: inherit;
+    }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(42, 90, 58, 0.5); }
+    .start-btn:active { transform: translateY(0); }
+    .start-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+    /* ========== LECTURE SCREEN (Classroom) ========== */
+    #lecture-screen {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent, transparent 28px,
+          rgba(0,0,0,0.03) 28px, rgba(0,0,0,0.03) 29px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent, transparent 28px,
+          rgba(0,0,0,0.02) 28px, rgba(0,0,0,0.02) 29px
+        ),
+        radial-gradient(ellipse at 30% 20%, rgba(60, 130, 80, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(30, 63, 42, 0.3) 0%, transparent 60%),
+        linear-gradient(180deg, #2d5a3d 0%, #234a32 40%, #1e3f2a 100%);
+      cursor: default;
+      padding: 0;
+      justify-content: flex-start;
+    }
+
+    /* Chalkboard frame */
+    #lecture-screen::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(180deg, var(--wood-dark), var(--wood));
+      z-index: 5;
+    }
+
+    /* Chalk tray / desk */
+    .desk-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background:
+        linear-gradient(180deg,
+          var(--wood-light) 0%,
+          var(--wood) 20%,
+          var(--wood-dark) 100%
+        );
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 0 24px;
+    }
+
+    .desk-progress-track {
+      flex: 1;
+      max-width: 500px;
+      height: 6px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .desk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--chalk), #e8e0cc);
+      border-radius: 3px;
+      transition: width 1s linear;
+      width: 0%;
+    }
+
+    .desk-info {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Header */
+    .lecture-header {
+      position: fixed;
+      top: 6px; left: 0; right: 0;
+      padding: 12px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 10;
+    }
+
+    .lecture-status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--chalk-dim); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    .exit-btn {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(212, 205, 184, 0.15);
+      color: var(--chalk-dim);
+      padding: 6px 14px; border-radius: 20px; font-size: 11px;
+      cursor: pointer; transition: var(--transition); font-family: inherit;
+    }
+    .exit-btn:hover { background: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.4); color: #f87171; }
+
+    /* Center content */
+    .lecture-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px 80px;
+      width: 100%;
+    }
+
+    /* Task on chalkboard */
+    .chalk-task {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--chalk);
+      text-shadow: 0 0 8px rgba(212, 205, 184, 0.2);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      opacity: 0.9;
+    }
+
+    .chalk-task-label {
+      font-size: 11px;
+      color: var(--chalk-dim);
+      margin-bottom: 32px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Clock-style timer */
+    .clock-container {
+      position: relative;
+      width: 240px; height: 240px;
+      margin-bottom: 32px;
+    }
+
+    .clock-face {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      border: 3px solid var(--chalk-dim);
+      position: relative;
+      background: rgba(0,0,0,0.15);
+      box-shadow:
+        inset 0 0 30px rgba(0,0,0,0.2),
+        0 0 20px rgba(0,0,0,0.15);
+    }
+
+    /* Clock tick marks */
+    .clock-ticks {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+    }
+
+    .clock-tick {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 2px;
+      height: 12px;
+      background: var(--chalk-dim);
+      transform-origin: bottom center;
+      border-radius: 1px;
+    }
+    .clock-tick.major { height: 16px; width: 2.5px; background: var(--chalk); opacity: 0.7; }
+
+    .clock-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .clock-time {
+      font-size: 52px;
+      font-weight: 900;
+      color: var(--chalk);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      line-height: 1;
+      text-shadow: 0 0 12px rgba(212, 205, 184, 0.15);
+    }
+
+    .clock-label {
+      font-size: 12px;
+      color: var(--chalk-dim);
+      margin-top: 6px;
+      letter-spacing: 2px;
+    }
+
+    /* SVG ring on clock */
+    .clock-ring {
+      position: absolute;
+      top: -3px; left: -3px;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
+      transform: rotate(-90deg);
+    }
+    .clock-ring-progress {
+      fill: none;
+      stroke: var(--chalk);
+      stroke-width: 3;
+      stroke-linecap: round;
+      opacity: 0.5;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    /* Quote */
+    .lecture-quote {
+      font-size: 13px;
+      color: var(--chalk-dim);
+      max-width: 300px;
+      text-align: center;
+      line-height: 1.7;
+      transition: opacity 0.5s;
+      font-style: italic;
+    }
+
+    /* ========== Tab Warning ========== */
+    .tab-warning {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      background: linear-gradient(90deg, #b91c1c, #991b1b);
+      color: white; text-align: center; padding: 10px;
+      font-size: 13px; font-weight: 600; z-index: 200;
+      animation: slideDown 0.3s ease;
+    }
+    .tab-warning.active { display: block; }
+    @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+    /* ========== EXIT MODAL ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius);
+      padding: 32px; max-width: 360px;
+      width: calc(100% - 48px); text-align: center;
+      animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes scaleIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+
+    .modal-emoji { font-size: 48px; margin-bottom: 16px; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal-message { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; white-space: pre-line; }
+    .modal-remaining {
+      display: inline-block;
+      background: rgba(42, 90, 58, 0.12); color: var(--chalk-green);
+      padding: 6px 16px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; margin-bottom: 24px;
+    }
+    .modal-buttons { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1; padding: 14px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: var(--transition); border: none; font-family: inherit;
+    }
+    .modal-btn-continue {
+      background: linear-gradient(135deg, var(--chalk-green), var(--chalk-green-light));
+      color: white; box-shadow: 0 4px 16px rgba(42, 90, 58, 0.4);
+    }
+    .modal-btn-continue:hover { transform: translateY(-1px); }
+    .modal-btn-exit {
+      background: rgba(0,0,0,0.03); color: var(--text-secondary);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .modal-btn-exit:hover { background: rgba(192,57,43,0.08); color: var(--danger); border-color: rgba(192,57,43,0.2); }
+    .exit-count { font-size: 11px; color: var(--text-dim); margin-top: 16px; }
+
+    /* ========== COMPLETE SCREEN ========== */
+    #complete-screen {
+      background:
+        radial-gradient(ellipse at 50% 0%, var(--warm-glow) 0%, transparent 60%),
+        linear-gradient(180deg, #d8cebf 0%, #cfc4b3 50%, #c5b9a6 100%);
+    }
+    .complete-content { text-align: center; max-width: 400px; }
+
+    .complete-icon {
+      width: 96px; height: 96px;
+      background: linear-gradient(135deg, var(--success), #27ae60);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; margin: 0 auto 24px;
+      box-shadow: 0 8px 32px rgba(46,204,113,0.3);
+      animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes bounceIn { 0%{transform:scale(0)} 60%{transform:scale(1.1)} 100%{transform:scale(1)} }
+
+    .complete-title { font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+    .complete-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+    .complete-task { font-size: 13px; color: var(--accent); margin-bottom: 28px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm); padding: 16px 12px;
+      box-shadow: 0 2px 8px var(--warm-shadow);
+    }
+    .stat-value { font-size: 24px; font-weight: 900; color: var(--chalk-green); }
+    .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+    .streak-section {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
+      box-shadow: 0 2px 8px var(--warm-shadow);
+    }
+    .streak-title { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .streak-days { display: flex; gap: 6px; justify-content: center; }
+    .streak-day {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--bg-secondary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--text-dim);
+    }
+    .streak-day.done { background: rgba(42,90,58,0.12); color: var(--chalk-green); border: 1px solid rgba(42,90,58,0.25); }
+    .streak-day.today { background: var(--chalk-green); color: white; font-weight: 700; }
+
+    .restart-btn {
+      width: 100%; padding: 16px; font-size: 15px; font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--chalk-green), var(--chalk-green-light));
+      border: none; border-radius: var(--radius); cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(42, 90, 58, 0.4);
+      font-family: inherit;
+    }
+    .restart-btn:hover { transform: translateY(-2px); }
+
+    .scrollable { overflow-y: auto; max-height: 100vh; padding-bottom: 40px; }
+
+    @media (max-height: 700px) {
+      .clock-container { width: 190px; height: 190px; }
+      .clock-time { font-size: 40px; }
+      .chalk-task { font-size: 16px; }
+      .hero-illustration svg { width: 160px; height: auto; }
+      .app-title { font-size: 24px; }
+      .conditions { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== SETUP SCREEN ===== -->
+  <div id="setup-screen" class="screen active">
+    <div class="setup-content scrollable">
+      <!-- Cat on book illustration (mochi-style kawaii) -->
+      <div class="hero-illustration">
+        <svg viewBox="0 0 180 150" width="200" height="170" xmlns="http://www.w3.org/2000/svg">
+          <!-- Open book -->
+          <g transform="translate(20, 95)">
+            <path d="M0 12 Q0 0, 15 0 L70 0 L70 45 Q70 45, 0 45 Z" fill="#f0e8d8" stroke="#d0c4b0" stroke-width="1"/>
+            <path d="M140 12 Q140 0, 125 0 L70 0 L70 45 Q70 45, 140 45 Z" fill="#f6f0e4" stroke="#d0c4b0" stroke-width="1"/>
+            <line x1="70" y1="0" x2="70" y2="45" stroke="#c8bca8" stroke-width="1.2"/>
+            <!-- Text lines left page -->
+            <line x1="10" y1="12" x2="60" y2="12" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="10" y1="19" x2="55" y2="19" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="10" y1="26" x2="58" y2="26" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="10" y1="33" x2="50" y2="33" stroke="#ddd4c4" stroke-width="1.5"/>
+            <!-- Text lines right page -->
+            <line x1="80" y1="12" x2="130" y2="12" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="80" y1="19" x2="125" y2="19" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="80" y1="26" x2="128" y2="26" stroke="#ddd4c4" stroke-width="1.5"/>
+            <line x1="80" y1="33" x2="120" y2="33" stroke="#ddd4c4" stroke-width="1.5"/>
+          </g>
+
+          <!-- Cat tail (behind body) -->
+          <path d="M130 92 Q155 80, 158 60 Q160 48, 152 42" stroke="#f0c878" stroke-width="9" fill="none" stroke-linecap="round"/>
+          <path d="M152 42 Q148 38, 145 42" stroke="#f0c878" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <!-- Tail stripes -->
+          <path d="M142 68 Q148 64, 152 58" stroke="#e0b050" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.3"/>
+          <path d="M148 56 Q152 50, 154 46" stroke="#e0b050" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.3"/>
+
+          <!-- Cat body (very round mochi blob) -->
+          <ellipse cx="90" cy="94" rx="42" ry="28" fill="#f0c878"/>
+          <!-- Belly stripe -->
+          <ellipse cx="90" cy="100" rx="26" ry="18" fill="#fce8c0"/>
+
+          <!-- Front paws (resting on book) -->
+          <ellipse cx="62" cy="108" rx="10" ry="6" fill="#f0c878"/>
+          <ellipse cx="118" cy="108" rx="10" ry="6" fill="#f0c878"/>
+          <!-- Paw beans -->
+          <ellipse cx="60" cy="110" rx="2" ry="1.5" fill="#ffb0aa"/>
+          <ellipse cx="64" cy="110" rx="2" ry="1.5" fill="#ffb0aa"/>
+          <ellipse cx="116" cy="110" rx="2" ry="1.5" fill="#ffb0aa"/>
+          <ellipse cx="120" cy="110" rx="2" ry="1.5" fill="#ffb0aa"/>
+
+          <!-- Cat head (very big & round) -->
+          <circle cx="90" cy="52" r="40" fill="#f0c878"/>
+          <!-- Face lighter area -->
+          <ellipse cx="90" cy="60" rx="30" ry="26" fill="#fce8c0"/>
+
+          <!-- Ears (round) -->
+          <ellipse cx="58" cy="22" rx="14" ry="18" fill="#f0c878"/>
+          <ellipse cx="58" cy="20" rx="9" ry="12" fill="#ffbbcc"/>
+          <ellipse cx="122" cy="22" rx="14" ry="18" fill="#f0c878"/>
+          <ellipse cx="122" cy="20" rx="9" ry="12" fill="#ffbbcc"/>
+
+          <!-- Forehead stripes -->
+          <path d="M82 30 L86 40" stroke="#e0b050" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+          <path d="M90 28 L90 38" stroke="#e0b050" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+          <path d="M98 30 L94 40" stroke="#e0b050" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+
+          <!-- Eyes (relaxed horizontal lines - yurui style) -->
+          <line x1="73" y1="50" x2="84" y2="50" stroke="#3a3530" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="96" y1="50" x2="107" y2="50" stroke="#3a3530" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- Nose -->
+          <ellipse cx="90" cy="58" rx="3.5" ry="2.5" fill="#ffaaaa"/>
+
+          <!-- Mouth (cat omega shape) -->
+          <path d="M90 60.5 L90 63" stroke="#c08870" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M83 64 Q87 68, 90 63 Q93 68, 97 64" stroke="#c08870" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Whiskers -->
+          <line x1="50" y1="52" x2="68" y2="56" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+          <line x1="48" y1="60" x2="67" y2="60" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+          <line x1="50" y1="68" x2="68" y2="64" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+          <line x1="130" y1="52" x2="112" y2="56" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+          <line x1="132" y1="60" x2="113" y2="60" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+          <line x1="130" y1="68" x2="112" y2="64" stroke="#c8a870" stroke-width="1.2" opacity="0.45"/>
+
+          <!-- Blush -->
+          <ellipse cx="70" cy="60" rx="7" ry="4" fill="rgba(255,150,150,0.3)"/>
+          <ellipse cx="110" cy="60" rx="7" ry="4" fill="rgba(255,150,150,0.3)"/>
+
+          <!-- Sparkles & decorations -->
+          <g fill="#ffcc44" opacity="0.6">
+            <polygon points="16,40 17.5,44 22,44 18.5,47 19.5,51 16,48.5 12.5,51 13.5,47 10,44 14.5,44" transform="scale(0.7)"/>
+            <polygon points="16,40 17.5,44 22,44 18.5,47 19.5,51 16,48.5 12.5,51 13.5,47 10,44 14.5,44" transform="scale(0.6) translate(250,15)"/>
+          </g>
+          <!-- Hearts -->
+          <path d="M22 20 C22 17.5, 25 17.5, 25 20 C25 17.5, 28 17.5, 28 20 C28 23, 25 26, 25 26 C25 26, 22 23, 22 20Z" fill="#ffaacc" opacity="0.45"/>
+          <path d="M148 28 C148 26, 150.5 26, 150.5 28 C150.5 26, 153 26, 153 28 C153 30.5, 150.5 33, 150.5 33 C150.5 33, 148 30.5, 148 28Z" fill="#ffaacc" opacity="0.4"/>
+
+          <!-- Musical note (cat is enjoying reading) -->
+          <g transform="translate(140, 18)" fill="#ffaa66" opacity="0.5">
+            <circle cx="0" cy="10" r="3"/>
+            <rect x="2.5" y="-4" width="1.8" height="14" rx="0.5"/>
+            <path d="M4.3 -4 Q10 -8, 10 -2" stroke="#ffaa66" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <h1 class="app-title">内職作業モード</h1>
+      <p class="app-subtitle">大学の授業中みたいに<br>「仕方なく集中できる」環境をつくる</p>
+
+      <div class="conditions">
+        <div class="condition">
+          <span class="condition-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+          <span class="condition-text"><strong>通知ゼロ</strong>外部の割り込みなし</span>
+        </div>
+        <div class="condition">
+          <span class="condition-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span>
+          <span class="condition-text"><strong>ネット遮断</strong>気が散るもの無し</span>
+        </div>
+        <div class="condition">
+          <span class="condition-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <span class="condition-text"><strong>退出不可</strong>この場から動けない</span>
+        </div>
+        <div class="condition">
+          <span class="condition-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+          <span class="condition-text"><strong>時間制限</strong>終わりがあるから頑張れる</span>
+        </div>
+      </div>
+
+      <!-- Task declaration -->
+      <div class="task-setting">
+        <div class="task-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          今から内職すること
+        </div>
+        <input type="text" class="task-input" id="task-input" placeholder="例：レポートを3ページ書く" maxlength="40">
+        <div class="task-examples">
+          <span class="task-example" data-task="レポートを書く">レポートを書く</span>
+          <span class="task-example" data-task="教科書を読む">教科書を読む</span>
+          <span class="task-example" data-task="問題集を解く">問題集を解く</span>
+          <span class="task-example" data-task="資料を整理する">資料を整理する</span>
+        </div>
+      </div>
+
+      <div class="timer-setting">
+        <div class="timer-label">授業時間を設定</div>
+        <div class="timer-display"><span id="setup-minutes">60</span><span> 分</span></div>
+        <input type="range" class="timer-slider" id="timer-slider" min="10" max="120" step="5" value="60">
+        <div class="timer-presets">
+          <button class="preset-btn" data-min="25">25分</button>
+          <button class="preset-btn" data-min="45">45分</button>
+          <button class="preset-btn active" data-min="60">60分</button>
+          <button class="preset-btn" data-min="90">90分</button>
+        </div>
+      </div>
+
+      <div class="dnd-tip">
+        <strong>Tips:</strong> 始める前にスマホ・PCの「おやすみモード」をONにすると、通知ゼロの環境が完成します
+      </div>
+
+      <button class="start-btn" id="start-btn" disabled>やることを書いて授業開始</button>
+    </div>
+  </div>
+
+  <!-- ===== LECTURE SCREEN (Classroom) ===== -->
+  <div id="lecture-screen" class="screen">
+    <div class="tab-warning" id="tab-warning">授業中です！画面に戻ってきてください</div>
+
+    <div class="lecture-header">
+      <div class="lecture-status">
+        <div class="status-dot"></div>
+        <span>授業中</span>
+      </div>
+      <button class="exit-btn" id="exit-btn">退出する</button>
+    </div>
+
+    <div class="lecture-body">
+      <div class="chalk-task" id="chalk-task"></div>
+      <div class="chalk-task-label">── 本日の課題 ──</div>
+
+      <div class="clock-container">
+        <div class="clock-face">
+          <div class="clock-ticks" id="clock-ticks"></div>
+          <svg class="clock-ring" viewBox="0 0 246 246">
+            <circle class="clock-ring-progress" id="clock-progress" cx="123" cy="123" r="118"
+              fill="none" stroke-dasharray="741.42" stroke-dashoffset="0" />
+          </svg>
+          <div class="clock-center">
+            <div class="clock-time" id="timer-display">60:00</div>
+            <div class="clock-label">残り時間</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lecture-quote" id="lecture-quote"></div>
+    </div>
+
+    <div class="desk-bar">
+      <div class="desk-info" id="elapsed-time">経過 0:00</div>
+      <div class="desk-progress-track">
+        <div class="desk-progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="desk-info" id="progress-percent">0%</div>
+    </div>
+  </div>
+
+  <!-- ===== EXIT MODAL ===== -->
+  <div class="modal-overlay" id="exit-modal">
+    <div class="modal">
+      <div class="modal-emoji" id="modal-emoji"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-message" id="modal-message"></div>
+      <div class="modal-remaining" id="modal-remaining"></div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-exit" id="modal-exit-btn">退出する</button>
+        <button class="modal-btn modal-btn-continue" id="modal-continue-btn">続ける</button>
+      </div>
+      <div class="exit-count" id="exit-count"></div>
+    </div>
+  </div>
+
+  <!-- ===== COMPLETE SCREEN ===== -->
+  <div id="complete-screen" class="screen">
+    <div class="complete-content">
+      <div class="complete-icon">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1 class="complete-title">お疲れさまでした</h1>
+      <p class="complete-subtitle" id="complete-subtitle">授業が終わりました。よく頑張りました！</p>
+      <p class="complete-task" id="complete-task"></p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-duration">0</div>
+          <div class="stat-label">集中した時間(分)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-resisted">0</div>
+          <div class="stat-label">退出を我慢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">累計セッション</div>
+        </div>
+      </div>
+
+      <div class="streak-section">
+        <div class="streak-title">今週の記録</div>
+        <div class="streak-days" id="streak-days"></div>
+      </div>
+
+      <button class="restart-btn" id="restart-btn">もう1コマ受ける</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== State ==========
+    let totalSeconds = 60 * 60;
+    let remainingSeconds = totalSeconds;
+    let timerInterval = null;
+    let exitAttempts = 0;
+    let tabAwayCount = 0;
+    let sessionActive = false;
+    let quoteIndex = 0;
+    let currentTask = '';
+
+    // ========== Elements ==========
+    const setupScreen = document.getElementById('setup-screen');
+    const lectureScreen = document.getElementById('lecture-screen');
+    const completeScreen = document.getElementById('complete-screen');
+    const exitModal = document.getElementById('exit-modal');
+    const tabWarning = document.getElementById('tab-warning');
+
+    const taskInput = document.getElementById('task-input');
+    const timerSlider = document.getElementById('timer-slider');
+    const setupMinutes = document.getElementById('setup-minutes');
+    const startBtn = document.getElementById('start-btn');
+    const exitBtn = document.getElementById('exit-btn');
+
+    const chalkTask = document.getElementById('chalk-task');
+    const timerDisplay = document.getElementById('timer-display');
+    const clockProgress = document.getElementById('clock-progress');
+    const progressFill = document.getElementById('progress-fill');
+    const elapsedTime = document.getElementById('elapsed-time');
+    const progressPercent = document.getElementById('progress-percent');
+    const lectureQuote = document.getElementById('lecture-quote');
+
+    const modalEmoji = document.getElementById('modal-emoji');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalRemaining = document.getElementById('modal-remaining');
+    const modalExitBtn = document.getElementById('modal-exit-btn');
+    const modalContinueBtn = document.getElementById('modal-continue-btn');
+    const exitCount = document.getElementById('exit-count');
+
+    const restartBtn = document.getElementById('restart-btn');
+
+    // ========== Build clock ticks ==========
+    (function buildTicks() {
+      const container = document.getElementById('clock-ticks');
+      for (let i = 0; i < 60; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'clock-tick' + (i % 5 === 0 ? ' major' : '');
+        tick.style.transform = `translateX(-50%) rotate(${i * 6}deg)`;
+        tick.style.transformOrigin = `50% ${120 - 8}px`;
+        container.appendChild(tick);
+      }
+    })();
+
+    // ========== Quotes ==========
+    const quotes = [
+      "今この瞬間に集中できている。それだけで十分すごい。",
+      "あと少しだけ、この場所にいよう。",
+      "逃げたくなるのは自然なこと。でも今は授業中。",
+      "退屈は集中の入口。その先に没頭がある。",
+      "動けないからこそ、頭が動き始める。",
+      "ADHDの脳は制約があると力を発揮する。",
+      "「あと少し」を何回か繰り返すだけでいい。",
+      "完璧じゃなくていい。ここにいるだけで100点。",
+      "周りは気にしなくていい。自分のペースで。",
+      "この時間が終わったら自由。だから今は集中。",
+      "やる気は行動のあとに来る。まず座っていよう。",
+      "脳が「飽きた」と言っても、体はここにある。",
+    ];
+
+    const exitMessages = [
+      { emoji: "🧑‍🏫", title: "先生が見てますよ", message: "授業中に席を立つのは目立ちます。\nもう少しだけ頑張ってみませんか？" },
+      { emoji: "😤", title: "まだ授業中です", message: "ここで抜けたらもったいない！\n残り時間はそんなに長くないですよ。" },
+      { emoji: "🫣", title: "本当に抜けるの？", message: "せっかくここまで集中できたのに…\nあとちょっとだけ続けてみよう。" },
+      { emoji: "💪", title: "踏ん張りどころ！", message: "ADHDの脳は「やめたい」と叫ぶ。\nでもあなたは前もそれに勝った。" },
+      { emoji: "🎯", title: "ゴールは近い", message: "ここで離脱するのは99%走ったマラソンを\nゴール前でやめるようなもの。" },
+    ];
+
+    // ========== Utility ==========
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function showScreen(screen) {
+      [setupScreen, lectureScreen, completeScreen].forEach(s => s.classList.remove('active'));
+      screen.classList.add('active');
+    }
+
+    // ========== Storage ==========
+    function getStats() {
+      try { return JSON.parse(localStorage.getItem('naishoku-stats') || '{}'); }
+      catch { return {}; }
+    }
+
+    function saveSession(durationMin) {
+      const stats = getStats();
+      const today = new Date().toISOString().slice(0, 10);
+      if (!stats.sessions) stats.sessions = [];
+      stats.sessions.push({ date: today, duration: durationMin, task: currentTask, exitAttempts, tabAway: tabAwayCount });
+      stats.totalSessions = (stats.totalSessions || 0) + 1;
+      localStorage.setItem('naishoku-stats', JSON.stringify(stats));
+      return stats;
+    }
+
+    // ========== Task Input ==========
+    taskInput.addEventListener('input', () => {
+      const hasTask = taskInput.value.trim().length > 0;
+      startBtn.disabled = !hasTask;
+      startBtn.textContent = hasTask ? '授業開始' : 'やることを書いて授業開始';
+    });
+
+    document.querySelectorAll('.task-example').forEach(el => {
+      el.addEventListener('click', () => {
+        taskInput.value = el.dataset.task;
+        taskInput.dispatchEvent(new Event('input'));
+        taskInput.focus();
+      });
+    });
+
+    // ========== Timer Slider ==========
+    timerSlider.addEventListener('input', () => {
+      const val = timerSlider.value;
+      setupMinutes.textContent = val;
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.min === val);
+      });
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.min;
+        timerSlider.value = val;
+        setupMinutes.textContent = val;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // ========== Start Session ==========
+    startBtn.addEventListener('click', () => {
+      if (!taskInput.value.trim()) return;
+      currentTask = taskInput.value.trim();
+      totalSeconds = parseInt(timerSlider.value) * 60;
+      remainingSeconds = totalSeconds;
+      exitAttempts = 0;
+      tabAwayCount = 0;
+      quoteIndex = 0;
+      sessionActive = true;
+
+      chalkTask.textContent = currentTask;
+      showScreen(lectureScreen);
+      requestFullscreen();
+      startTimer();
+      showQuote();
+    });
+
+    // ========== Fullscreen ==========
+    function requestFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && sessionActive) {
+        setTimeout(() => { if (sessionActive) showExitModal(); }, 200);
+      }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      if (!document.webkitFullscreenElement && sessionActive) {
+        setTimeout(() => { if (sessionActive) showExitModal(); }, 200);
+      }
+    });
+
+    // ========== Timer ==========
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        updateTimerDisplay();
+        if (remainingSeconds <= 0) completeSession();
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      timerDisplay.textContent = formatTime(remainingSeconds);
+
+      const circumference = 2 * Math.PI * 118;
+      const progress = 1 - (remainingSeconds / totalSeconds);
+      clockProgress.style.strokeDashoffset = circumference * (1 - progress);
+
+      progressFill.style.width = (progress * 100) + '%';
+
+      const elapsed = totalSeconds - remainingSeconds;
+      elapsedTime.textContent = `経過 ${formatTime(elapsed)}`;
+      progressPercent.textContent = Math.round(progress * 100) + '%';
+    }
+
+    // ========== Quotes ==========
+    function showQuote() {
+      if (!sessionActive) return;
+      lectureQuote.style.opacity = 0;
+      setTimeout(() => {
+        lectureQuote.textContent = quotes[quoteIndex % quotes.length];
+        lectureQuote.style.opacity = 1;
+        quoteIndex++;
+      }, 300);
+      setTimeout(showQuote, 20000);
+    }
+
+    // ========== Tab Visibility ==========
+    document.addEventListener('visibilitychange', () => {
+      if (!sessionActive) return;
+      if (document.hidden) { tabAwayCount++; }
+      else {
+        tabWarning.classList.add('active');
+        setTimeout(() => tabWarning.classList.remove('active'), 3000);
+      }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+      if (sessionActive) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    // ========== Exit Modal ==========
+    function showExitModal() {
+      exitAttempts++;
+      const msg = exitMessages[Math.min(exitAttempts - 1, exitMessages.length - 1)];
+      modalEmoji.textContent = msg.emoji;
+      modalTitle.textContent = msg.title;
+      modalMessage.textContent = msg.message;
+      const remMin = Math.ceil(remainingSeconds / 60);
+      modalRemaining.textContent = `残り ${remMin} 分`;
+      exitCount.textContent = exitAttempts > 1 ? `退出を試みた回数: ${exitAttempts}回（でも全部耐えてる！）` : '';
+      exitModal.classList.add('active');
+    }
+
+    exitBtn.addEventListener('click', showExitModal);
+    modalContinueBtn.addEventListener('click', () => { exitModal.classList.remove('active'); requestFullscreen(); });
+    modalExitBtn.addEventListener('click', () => { exitModal.classList.remove('active'); endSession(false); });
+
+    // ========== Complete ==========
+    function completeSession() { endSession(true); }
+
+    function endSession(completed) {
+      sessionActive = false;
+      clearInterval(timerInterval);
+      exitFullscreen();
+
+      const elapsed = totalSeconds - remainingSeconds;
+      const elapsedMin = Math.round(elapsed / 60);
+      const stats = saveSession(elapsedMin);
+
+      if (completed) {
+        document.getElementById('complete-subtitle').textContent = '授業が終わりました。よく頑張りました！';
+      } else {
+        document.getElementById('complete-subtitle').textContent = `${elapsedMin}分間集中できました。途中退出でも立派です！`;
+      }
+      document.getElementById('complete-task').textContent = `「${currentTask}」に取り組みました`;
+      showCompleteScreen(elapsedMin, stats);
+    }
+
+    function showCompleteScreen(durationMin, stats) {
+      document.getElementById('stat-duration').textContent = durationMin;
+      document.getElementById('stat-resisted').textContent = exitAttempts + '回';
+      document.getElementById('stat-total').textContent = stats.totalSessions || 1;
+      renderStreak(stats);
+      showScreen(completeScreen);
+    }
+
+    function renderStreak(stats) {
+      const container = document.getElementById('streak-days');
+      container.innerHTML = '';
+      const dayLabels = ['月', '火', '水', '木', '金', '土', '日'];
+      const today = new Date();
+      const dayOfWeek = (today.getDay() + 6) % 7;
+      const sessions = (stats.sessions || []);
+      const sessionDates = new Set(sessions.map(s => s.date));
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - dayOfWeek + i);
+        const dateStr = d.toISOString().slice(0, 10);
+        const isToday = i === dayOfWeek;
+        const isDone = sessionDates.has(dateStr);
+        const el = document.createElement('div');
+        el.className = 'streak-day' + (isToday ? ' today' : isDone ? ' done' : '');
+        el.textContent = dayLabels[i];
+        container.appendChild(el);
+      }
+    }
+
+    // ========== Restart ==========
+    restartBtn.addEventListener('click', () => {
+      taskInput.value = '';
+      startBtn.disabled = true;
+      startBtn.textContent = 'やることを書いて授業開始';
+      showScreen(setupScreen);
+    });
+
+    // ========== Keyboard Prevention ==========
+    document.addEventListener('keydown', (e) => {
+      if (!sessionActive) return;
+      if ((e.ctrlKey || e.metaKey) && ['w', 't', 'n', 'l'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        showExitModal();
+      }
+    });
+
+    // ========== Service Worker ==========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
