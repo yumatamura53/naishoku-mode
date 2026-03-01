@@ -588,11 +588,8 @@
     }
     .restart-btn:hover { transform: translateY(-2px); }
 
-    .screen.scrollable { justify-content: flex-start; overflow-y: auto; padding-top: 32px; padding-bottom: 40px; }
-    .screen.scrollable::-webkit-scrollbar { width: 6px; }
-    .screen.scrollable::-webkit-scrollbar-track { background: transparent; }
-    .screen.scrollable::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
-    .screen.scrollable::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+    .screen.scrollable { justify-content: flex-start; overflow-y: auto; padding-top: 32px; padding-bottom: 40px; scrollbar-width: none; -ms-overflow-style: none; }
+    .screen.scrollable::-webkit-scrollbar { display: none; }
 
     @media (max-height: 700px) {
       .clock-container { width: 190px; height: 190px; }
