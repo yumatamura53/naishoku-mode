@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naishoku-v3';
+const CACHE_NAME = 'naishoku-v4';
 const ASSETS = [
   './',
   './index.html',
