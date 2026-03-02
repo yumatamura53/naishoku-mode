@@ -3,7 +3,7 @@
   "short_name": "内職作業モード",
   "description": "大学の授業中みたいに「仕方なく集中できる」環境をつくるアプリ",
   "start_url": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#d8cebf",
   "theme_color": "#e8dfd0",
   "orientation": "any",
